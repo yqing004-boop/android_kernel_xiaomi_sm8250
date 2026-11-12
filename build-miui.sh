@@ -5,6 +5,15 @@
 # Ensure the script exits on error
 set -e
 
+# ZyC-Clang 的 ld.lld 是动态链接的，依赖 libxml2.so.2；GitHub Actions 的 ubuntu
+# 镜像默认没装这个库，导致 vdso 链接阶段报 "libxml2.so.2: cannot open shared
+# object file" 并 exit 127。这里先检测，缺失就装上。
+if ! ldconfig -p 2>/dev/null | grep -q 'libxml2\.so\.2'; then
+    echo "libxml2.so.2 not found, installing it..."
+    sudo apt-get update -qq || true
+    sudo apt-get install -y -qq libxml2 || true
+fi
+
 TOOLCHAIN_PATH=$HOME/zyc-clang/bin
 GIT_COMMIT_ID=$(git rev-parse --short=8 HEAD)
 TARGET_DEVICE=$1
