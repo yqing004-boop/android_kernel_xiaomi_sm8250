@@ -124,6 +124,17 @@ if [ $KSU_ENABLE -eq 1 ]; then
     curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s v4.3.0-r2
     # 4.19 内核没有 MODULE_IMPORT_NS 宏，删掉 SukiSU 里对它的调用
     sed -i '/MODULE_IMPORT_NS/d' KernelSU/kernel/core/init.c
+    # 4.19 没有 iopoll(5.1+)/remap_file_range(4.20+)，加版本保护
+    python3 - <<'PY'
+p = 'KernelSU/kernel/infra/file_wrapper.c'
+s = open(p, encoding='utf-8').read()
+s = s.replace('#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)\nstatic int ksu_wrapper_iopoll(struct kiocb *kiocb, struct io_comp_batch *icb, unsigned int v)', '#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 1, 0)\nstatic int ksu_wrapper_iopoll(struct kiocb *kiocb, struct io_comp_batch *icb, unsigned int v)', 1)
+s = s.replace('static loff_t ksu_wrapper_remap_file_range(struct file *file_in, loff_t pos_in, struct file *file_out, loff_t pos_out,\n                                           loff_t len, unsigned int remap_flags)\n{', '#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0)\nstatic loff_t ksu_wrapper_remap_file_range(struct file *file_in, loff_t pos_in, struct file *file_out, loff_t pos_out,\n                                           loff_t len, unsigned int remap_flags)\n{', 1)
+s = s.replace('    }\n}\n\nstatic int ksu_wrapper_fadvise', '    }\n}\n#endif\n\nstatic int ksu_wrapper_fadvise', 1)
+s = s.replace('    p->ops.iopoll = fp->f_op->iopoll ? ksu_wrapper_iopoll : NULL;\n', '#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 1, 0)\n    p->ops.iopoll = fp->f_op->iopoll ? ksu_wrapper_iopoll : NULL;\n#endif\n', 1)
+s = s.replace('    p->ops.remap_file_range = fp->f_op->remap_file_range ? ksu_wrapper_remap_file_range : NULL;\n', '#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0)\n    p->ops.remap_file_range = fp->f_op->remap_file_range ? ksu_wrapper_remap_file_range : NULL;\n#endif\n', 1)
+open(p, 'w', encoding='utf-8').write(s)
+PY
 else
     echo "KSU is disabled"
 fi
