@@ -246,6 +246,58 @@ scripts/config --file out/.config \
     -d REKERNEL \
     -d REKERNEL_NETWORK
 
+# Droidspaces: enable the 4.19 non-GKI features before compiling the kernel.
+# Keep PERF_HUMANTASK disabled here; changing out/.config after the build
+# does not change the already packaged kernel Image.
+scripts/config --file out/.config \
+    -e SYSCTL -e SYSVIPC -e POSIX_MQUEUE \
+    -e NAMESPACES -e PID_NS -e UTS_NS -e IPC_NS \
+    -e SECCOMP -e SECCOMP_FILTER \
+    -e CGROUPS -e CGROUP_DEVICE -e CGROUP_SCHED \
+    -e FAIR_GROUP_SCHED -e CGROUP_FREEZER -e CGROUP_NET_PRIO \
+    -e MEMCG -e MEMCG_SWAP -e CFS_BANDWIDTH \
+    -e CGROUP_PIDS -e CGROUP_CPUACCT \
+    -e DEVTMPFS -e OVERLAY_FS -e TMPFS_POSIX_ACL -e TMPFS_XATTR \
+    -e FW_LOADER -e FW_LOADER_USER_HELPER -e FW_LOADER_COMPRESS \
+    -e NET_NS -e VETH -e BRIDGE -e NETFILTER -e BRIDGE_NETFILTER \
+    -e NETFILTER_ADVANCED -e NF_CONNTRACK \
+    -e IP_NF_IPTABLES -e IP_NF_FILTER -e NF_NAT -e NF_TABLES \
+    -e IP_NF_TARGET_MASQUERADE -e NETFILTER_XT_TARGET_MASQUERADE \
+    -e NETFILTER_XT_TARGET_TCPMSS -e NETFILTER_XT_MATCH_ADDRTYPE \
+    -e NF_CONNTRACK_NETLINK -e NF_NAT_REDIRECT \
+    -e IP_ADVANCED_ROUTER -e IP_MULTIPLE_TABLES \
+    -e NF_CONNTRACK_IPV4 -e NF_NAT_IPV4 -e IP_NF_NAT \
+    -e IPV6 -e IPV6_MULTIPLE_TABLES -e IP6_NF_IPTABLES \
+    -e IP6_NF_FILTER -e IP6_NF_MANGLE -e IP6_NF_NAT \
+    -e IP6_NF_TARGET_MASQUERADE -e NF_CONNTRACK_IPV6 -e NF_NAT_IPV6 \
+    -e MACVLAN -e USER_NS \
+    -e NETFILTER_XT_MATCH_COMMENT -e NETFILTER_XT_MATCH_STATE \
+    -e NETFILTER_XT_MATCH_CONNTRACK -e NETFILTER_XT_MATCH_MULTIPORT \
+    -e IP_NF_TARGET_REJECT -e IP6_NF_TARGET_REJECT \
+    -e NETFILTER_XT_TARGET_LOG -e NETFILTER_XT_MATCH_RECENT \
+    -e NETFILTER_XT_MATCH_LIMIT -e NETFILTER_XT_MATCH_HASHLIMIT \
+    -e NETFILTER_XT_MATCH_OWNER -e NETFILTER_XT_MATCH_PKTTYPE \
+    -e NETFILTER_XT_MATCH_MARK -e NETFILTER_XT_TARGET_MARK \
+    -e IP_SET -e IP_SET_HASH_IP -e IP_SET_HASH_NET \
+    -e NETFILTER_XT_SET -e NETFILTER_NETLINK_QUEUE \
+    -e NETFILTER_NETLINK_LOG -e NETFILTER_XT_TARGET_NFLOG \
+    -d ANDROID_PARANOID_NETWORK -d PERF_HUMANTASK
+
+# olddefconfig resolves dependencies; verify the effective configuration,
+# instead of treating scripts/config edits as proof that an option is enabled.
+make $MAKE_ARGS olddefconfig
+for option in SYSVIPC POSIX_MQUEUE NAMESPACES PID_NS UTS_NS IPC_NS SECCOMP SECCOMP_FILTER DEVTMPFS; do
+    if ! grep -qx "CONFIG_${option}=y" out/.config; then
+        echo "Droidspaces required option CONFIG_${option}=y is missing from the effective config" >&2
+        exit 1
+    fi
+done
+if ! grep -qx '# CONFIG_PERF_HUMANTASK is not set' out/.config; then
+    echo "CONFIG_PERF_HUMANTASK must be disabled before compiling" >&2
+    exit 1
+fi
+
+echo "Droidspaces required kernel options verified."
 make $MAKE_ARGS -j$(nproc)
 
 if [ -f "out/arch/arm64/boot/Image" ]; then
