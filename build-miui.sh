@@ -75,12 +75,12 @@ MAKE_ARGS="ARCH=arm64 \
            CROSS_COMPILE=aarch64-linux-gnu- \
            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
            CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
-           LD=ld.lld \
-           AR=llvm-ar \
-           NM=llvm-nm \
-           OBJCOPY=llvm-objcopy \
-           OBJDUMP=llvm-objdump \
-           STRIP=llvm-strip"
+           LD=aarch64-linux-gnu-ld \
+           AR=aarch64-linux-gnu-ar \
+           NM=aarch64-linux-gnu-nm \
+           OBJCOPY=aarch64-linux-gnu-objcopy \
+           OBJDUMP=aarch64-linux-gnu-objdump \
+           STRIP=aarch64-linux-gnu-strip"
 
 
 if [ "$1" == "j1" ]; then
