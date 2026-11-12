@@ -119,8 +119,9 @@ fi
 echo "TARGET_DEVICE: $TARGET_DEVICE"
 
 if [ $KSU_ENABLE -eq 1 ]; then
-    echo "KSU is enabled"
-    curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
+    echo "KSU is enabled (SukiSU Ultra)"
+    rm -rf KernelSU drivers/kernelsu
+    curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s v4.3.0-r2
 else
     echo "KSU is disabled"
 fi
@@ -207,11 +208,9 @@ make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
 if [ $KSU_ENABLE -eq 1 ]; then
     scripts/config --file out/.config \
     -e KSU \
-    -e THREAD_INFO_IN_TASK \
-    -e KSU_MULTI_MANAGER_SUPPORT \
     -e KPM \
-    -d KSU_TRACEPOINT_HOOK \
-    -e KSU_MANUAL_HOOK
+    -e KPROBES \
+    -e KRETPROBES
 else
     scripts/config --file out/.config -d KSU
 fi
