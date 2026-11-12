@@ -122,6 +122,8 @@ if [ $KSU_ENABLE -eq 1 ]; then
     echo "KSU is enabled (SukiSU Ultra)"
     rm -rf KernelSU drivers/kernelsu
     curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s v4.3.0-r2
+    # 4.19 内核没有 MODULE_IMPORT_NS 宏，删掉 SukiSU 里对它的调用
+    sed -i '/MODULE_IMPORT_NS/d' KernelSU/kernel/core/init.c
 else
     echo "KSU is disabled"
 fi
