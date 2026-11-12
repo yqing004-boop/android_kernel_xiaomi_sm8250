@@ -209,7 +209,9 @@ if [ $KSU_ENABLE -eq 1 ]; then
     -e KSU \
     -e THREAD_INFO_IN_TASK \
     -e KSU_MULTI_MANAGER_SUPPORT \
-    -e KPM
+    -e KPM \
+    -d KSU_TRACEPOINT_HOOK \
+    -e KSU_MANUAL_HOOK
 else
     scripts/config --file out/.config -d KSU
 fi
