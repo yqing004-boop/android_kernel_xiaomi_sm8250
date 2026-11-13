@@ -93,3 +93,5 @@
 
 
 #endif /* _UAPI_LINUX_FCNTL_H */
+
+#define REMAP_FILE_DEDUP	(1 << 0)
