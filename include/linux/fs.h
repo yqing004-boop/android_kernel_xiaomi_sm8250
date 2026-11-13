@@ -1875,12 +1875,6 @@ struct file_operations {
 			u64);
 	int (*dedupe_file_range)(struct file *, loff_t, struct file *, loff_t,
 			u64);
-#ifdef CONFIG_KSU
-	int (*iopoll)(struct kiocb *kiocb, bool spin);
-	loff_t (*remap_file_range)(struct file *file_in, loff_t pos_in,
-				 struct file *file_out, loff_t pos_out,
-				 loff_t len, unsigned int remap_flags);
-#endif
 	int (*fadvise)(struct file *, loff_t, loff_t, int);
 
 	ANDROID_KABI_RESERVE(1);
