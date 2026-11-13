@@ -133,6 +133,13 @@ if [ $KSU_ENABLE -eq 1 ]; then
     sed -i '/^static int ksu_wrapper_fadvise/i\#endif' "$FW"
     sed -i '/p->ops.remap_file_range = fp->f_op->remap_file_range/i\#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0)' "$FW"
     sed -i '/p->ops.remap_file_range = fp->f_op->remap_file_range/a\#endif' "$FW"
+    # 验证 sed 是否生效
+    if grep -q 'KERNEL_VERSION(6, 1, 0)' "$FW" 2>/dev/null; then
+        echo "ERROR: iopoll fix not applied to $FW" >&2
+        grep -n 'KERNEL_VERSION(6, 1' "$FW" >&2 || true
+        exit 1
+    fi
+    echo "iopoll/remap fixes verified in $FW"
 else
     echo "KSU is disabled"
 fi
