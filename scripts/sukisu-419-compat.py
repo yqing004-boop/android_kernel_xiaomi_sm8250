@@ -121,4 +121,13 @@ s = ev.read_text()
 s = replace_once(s, '#include <linux/minmax.h>\n', '#include <linux/kernel.h>\n')
 ev.write_text(s)
 
-print('SukiSU 4.19 compatibility: headers + path_mount + optional ops + seccomp cache handled')
+# --- pkg_observer.c: fsnotify handle_inode_event 是 5.9+ API，4.19 用 handle_event ---
+# 动态管理器监听在 4.19 上禁用（不影响预置签名管理器和 root）。
+po = ksu / 'manager/pkg_observer.c'
+s = po.read_text()
+if 'KERNEL_VERSION(5, 9, 0)' not in s:
+    s = '#include <linux/version.h>\n#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0)\n' + s
+    s += '\n#else\nint ksu_observer_init(void) { return 0; }\nvoid ksu_observer_exit(void) {}\n#endif\n'
+    po.write_text(s)
+
+print('SukiSU 4.19 compatibility: headers + path_mount + optional ops + seccomp cache + pkg_observer handled')
